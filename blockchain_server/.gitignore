@@ -1,0 +1,8 @@
+node_modules
+src/.env
+.env
+src/pgdata/
+src/docker-compose.env
+docker-compose.env
+pgdata/
+uploads

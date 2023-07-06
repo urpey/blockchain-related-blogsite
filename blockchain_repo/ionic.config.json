@@ -1,0 +1,7 @@
+{
+  "name": "blockchain_repo",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}

@@ -1,0 +1,2 @@
+npx pg-to-erd > erd2.text
+meld erd.txt erd2.txt

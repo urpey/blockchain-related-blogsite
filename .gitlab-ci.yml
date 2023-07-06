@@ -1,0 +1,90 @@
+image: node:16.15.0-slim
+
+stages:
+  - server-build
+  - server-deploy
+  - app-build
+  - app-deploy
+
+variables:
+  POSTGRES_DB: blockchain
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: admin
+  POSTGRES_HOST: postgres-servicees
+  SERVER_HOST: okd.urpey.xyz
+  SERVER_USER: ubuntu
+  APP_ROOT: blockchain_repo
+  WEB_SERVER_ROOT: blockchain_server
+  WEB_SERVER_IMAGE: blockchain-okd-image:latest
+
+
+server-build:
+  stage: server-build
+  image: "docker:18.09"
+  services:
+    - docker:18.09.7-dind
+  only:
+    - production
+  artifacts:
+    paths:
+      - $WEB_SERVER_ROOT/dist
+  before_script:
+    - cd $WEB_SERVER_ROOT
+    - mkdir -p dist
+  script:
+    - docker build . -t $WEB_SERVER_IMAGE
+    - docker save $WEB_SERVER_IMAGE | gzip > dist/image.gz
+
+server-deploy:
+  stage: server-deploy
+  only:
+    - production
+  image: ubuntu:20.04
+  dependencies:
+  - server-build
+  before_script:
+    - apt update
+    - apt install --yes git openssh-client 
+    - mkdir -p ~/.ssh
+    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/bad-project-key.pem
+    - chmod 400 ~/.ssh/bad-project-key.pem
+    - ssh-keyscan -H $SERVER_HOST > ~/.ssh/known_hosts
+    - echo "Host blockchain" >> ~/.ssh/config
+    - echo "  Hostname $SERVER_HOST" >> ~/.ssh/config
+    - echo "  User $SERVER_USER" >> ~/.ssh/config
+    - echo "  IdentityFile ~/.ssh/bad-project-key.pem " >> ~/.ssh/config
+    - chmod 644 ~/.ssh/known_hosts
+    - cd $WEB_SERVER_ROOT
+  script:
+    - scp ./docker-compose.yml "ubuntu@blockchain:~/blockchain"
+    - cat dist/image.gz | ssh ubuntu@blockchain "gunzip | docker load"
+    - ssh ubuntu@blockchain "
+        cd ~/blockchain &&
+        docker-compose up -d"
+
+app-build:  
+  stage: app-build
+  only:
+    - production
+  artifacts:
+    paths:
+      - $APP_ROOT/build
+  before_script:
+    - cd $APP_ROOT
+    - npm install
+  script:
+    - yarn build
+
+app-deploy: 
+  stage: app-deploy
+  only:
+    - production
+  image: "python:3.6"
+  dependencies:
+    - app-build
+  before_script:
+    - pip install awscli
+    - cd $APP_ROOT
+  script:
+    - chmod +x ./scripts/deploy.sh
+    - ./scripts/deploy.sh

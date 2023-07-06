@@ -1,0 +1,5 @@
+node_modules
+ubuntu-server
+package-lock.json
+.DS_Store
+yarn.lock

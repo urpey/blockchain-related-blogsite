@@ -1,0 +1,100 @@
+# Visualize on https://erd.surge.sh
+# or https://quick-erd.surge.sh
+#
+# Relationship Types
+#  -    - one to one
+#  -<   - one to many
+#  >-   - many to one
+#  >-<  - many to many
+#  -0   - one to zero or one
+#  0-   - zero or one to one
+#  0-0  - zero or one to zero or one
+#  -0<  - one to zero or many
+#  >0-  - zero or many to one
+#
+////////////////////////////////////
+
+
+users
+-----
+id integer PK
+username varchar(64) unique
+password_hash varchar(60)
+email varchar(64)
+icon varchar(255) NULL
+detail varchar(255) NULL
+
+
+editors
+-------
+id integer PK
+users_id integer FK >- users.id
+username varchar(64)
+
+
+articles
+--------
+id integer PK
+author_id integer FK >- users.id
+
+
+articles_version
+----------------
+id integer PK
+article_id integer FK >- articles.id
+editor_id integer NULL FK >- editors.id
+title varchar(255)
+ref_site varchar(255) NULL
+content text
+approved_at timestamp NULL
+
+
+like_articles
+-------------
+id integer PK
+user_id integer FK >- users.id
+article_id integer FK >- articles.id
+
+
+articles_image
+--------------
+id integer PK
+article_id integer FK >- articles.id
+image_name varchar(255) NULL
+image_idx varchar(20) NULL
+
+
+reward_articles
+---------------
+id integer PK
+user_id integer FK >- users.id
+article_id integer FK >- articles.id
+amount real
+
+
+save_articles
+-------------
+id integer PK
+user_id integer FK >- users.id
+article_id integer FK >- articles.id
+
+
+vote
+----
+id integer PK
+version_id integer NULL FK >- articles_version.id
+editor_id integer NULL FK >- editors.id
+is_approve boolean
+
+
+view
+----
+version_id integer NULL FK >- articles_version.id
+user_agent_id integer FK >- user_agent.id
+user_id integer NULL
+
+
+user_agent
+----------
+id integer PK
+user_agent text unique

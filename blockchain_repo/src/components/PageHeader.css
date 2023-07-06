@@ -1,0 +1,9 @@
+.toolbar-title-default{
+    --background: rgb(24, 25, 39);
+    --ion-font-family: 'Maven Pro', sans-serif;
+}
+
+.title-default.md,.title-default.ios {
+    --color: #FFFFFF;
+    font-size: 1.5rem
+}
